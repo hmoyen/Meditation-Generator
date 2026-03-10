@@ -5,4 +5,4 @@ google-generativeai==0.8.3
 gunicorn==23.0.0
 elevenlabs==2.38.1
 openai==2.26.0
-protobuf==7.34.0
+protobuf>=3.20.2,<6.0.0
