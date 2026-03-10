@@ -4,3 +4,4 @@ protobuf==7.34.0
 pydub==0.25.1
 python-dotenv==1.2.2
 gunicorn
+google-generativeai
