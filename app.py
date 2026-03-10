@@ -7,11 +7,14 @@ import os
 
 load_dotenv()
 
+print(f"DEBUG: Checking for GEMINI_API_KEY...")
 api_key = os.getenv("GEMINI_API_KEY")
 
 if not api_key:
+    print(f"DEBUG: Keys available in os.environ: {list(os.environ.keys())}")
     raise ValueError("GEMINI_API_KEY not found")
-
+else:
+    print("DEBUG: GEMINI_API_KEY found successfully.")
 app = Flask(__name__)
 
 @app.route("/")

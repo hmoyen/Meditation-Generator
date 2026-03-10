@@ -5,6 +5,11 @@ from dotenv import load_dotenv
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
 
+if not api_key:
+    available_keys = list(os.environ.keys())
+    print(f"CRITICAL: GEMINI_API_KEY not found. Available keys: {available_keys}")
+    raise ValueError("GEMINI_API_KEY not found")
+
 def generate_meditation(age, mood, context, style, length, api_key):
     # This is your safety net if the API fails
     fallback_script = (
