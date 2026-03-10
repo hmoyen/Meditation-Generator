@@ -1,10 +1,11 @@
 from flask import Flask, render_template, request
 from meditation import generate_meditation
-from tts import generate_audio
+from tts import generate_audio 
 import uuid
 from dotenv import load_dotenv
 import os
 
+# Load environment variables
 load_dotenv()
 
 print(f"DEBUG: Checking for GEMINI_API_KEY...")
@@ -15,6 +16,7 @@ if not api_key:
     raise ValueError("GEMINI_API_KEY not found")
 else:
     print("DEBUG: GEMINI_API_KEY found successfully.")
+
 app = Flask(__name__)
 
 @app.route("/")
@@ -23,21 +25,38 @@ def index():
 
 @app.route("/generate", methods=["POST"])
 def generate():
-
     age = request.form["age"]
     mood = request.form["mood"]
     context = request.form["context"]
     style = request.form["style"]
     length = request.form["length"]
+    journal = request.form.get("journal", "").strip()  # <-- Get journal input
 
-    script = generate_meditation(age, mood, context, style, length, api_key)
+    # Generate the meditation script
+    script = generate_meditation(age, mood, context, style, length, api_key, journal)
     unique_id = str(uuid.uuid4())
 
     # 1. Save Audio
     audio_dir = os.path.join("static", "audio")
     os.makedirs(audio_dir, exist_ok=True)
     audio_filename = f"{unique_id}.mp3"
-    generate_audio(script, os.path.join(audio_dir, audio_filename))
+
+    # OpenAI TTS instructions for meditation
+    meditation_instructions = (
+        "Speak slowly, gently, and soothingly. "
+        "Follow these rhythm and breathing rules strictly:\n"
+        "1. Use '...' for short, calm pauses between phrases.\n"
+        "2. Use '(inhale)...' and '(exhale)...' to guide breathing naturally.\n"
+        "3. Keep all sentences very short, calm, and reassuring.\n"
+        "4. Maintain a gentle, soothing female voice suitable for guided meditation.\n"
+        "5. Pause slightly at natural sentence breaks to enhance relaxation.\n"
+    )
+
+    generate_audio(
+        script=script,
+        filename=os.path.join(audio_dir, audio_filename),
+        instructions=meditation_instructions
+    )
 
     # 2. Save Script (.txt)
     script_dir = os.path.join("static", "scripts")
@@ -50,5 +69,6 @@ def generate():
 
     # Pass BOTH filenames to the template
     return render_template("result.html", audio_file=audio_filename, script_file=script_filename)
+
 if __name__ == "__main__":
     app.run(debug=True)

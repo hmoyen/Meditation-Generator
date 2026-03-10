@@ -1,79 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZenFocus | Meditation Generator</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body { background-color: #f8f9fa; }
-        .form-card { max-width: 500px; margin: auto; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZenFocus | Cognitive Wellbeing</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+body{
+    font-family:'Inter',sans-serif;
+    margin:0;
+    min-height:100vh;
+    background:linear-gradient(120deg,#0F5C8E,#1E78A6,#5FB3C7);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.form-card{
+    width:100%;
+    max-width:520px;
+    border-radius:18px;
+    background:rgba(255,255,255,0.92);
+    backdrop-filter:blur(8px);
+    border:none;
+}
+
+h1{
+    font-weight:300;
+    color:#0F5C8E;
+    font-size:34px;
+}
+
+.subtitle{
+    color:#6e8a96;
+    font-size:15px;
+}
+
+.form-label{
+    font-size:14px;
+    color:#4a6572;
+}
+
+.form-select, .form-control{
+    border-radius:10px;
+    padding:10px;
+}
+
+.btn-generate{
+    background:#1E78A6;
+    border:none;
+    border-radius:12px;
+    padding:12px;
+    font-weight:500;
+    transition:all .2s;
+}
+
+.btn-generate:hover{
+    background:#155f83;
+}
+
+#loading-overlay{
+    opacity:0;
+    visibility:hidden;
+    transition:opacity .6s;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(15,92,142,0.95);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    z-index:9999;
+}
+
+.breathing-circle{
+    width:120px;
+    height:120px;
+    background:#7AD6E8;
+    border-radius:50%;
+    animation:breathe 4s infinite ease-in-out;
+}
+
+@keyframes breathe{
+    0%,100%{ transform:scale(.8); opacity:.5; }
+    50%{ transform:scale(1.1); opacity:1; }
+}
+
+.loading-text{
+    margin-top:30px;
+    color:white;
+    letter-spacing:.05em;
+}
+
+</style>
 </head>
+
 <body>
 
-<div class="container py-5">
-    <div class="card form-card shadow p-4">
-        <h2 class="text-center mb-4">🧘 ZenFocus</h2>
-        <p class="text-center text-muted">Customize your meditation session.</p>
+<div class="card form-card shadow p-4">
 
-        <form action="/generate" method="post" onsubmit="showLoading()">
-            
-            <div class="mb-3">
-                <label class="form-label">Age Range</label>
-                <select name="age" class="form-select">
-                    <option>13-15</option>
-                    <option>16-18</option>
-                </select>
-            </div>
+    <h1 class="text-center mb-2">ZenFocus</h1>
+    <p class="subtitle text-center mb-4">Cognitive focus and emotional wellbeing</p>
 
-            <div class="mb-3">
-                <label class="form-label">Mood</label>
-                <select name="mood" class="form-select">
-                    <option>Anxious</option>
-                    <option>Stressed</option>
-                    <option>Tired</option>
-                    <option>Okay</option>
-                </select>
-            </div>
+<form action="/generate" method="post" id="meditationForm">
 
-            <div class="mb-3">
-                <label class="form-label">Context</label>
-                <select name="context" class="form-select">
-                    <option>Exams</option>
-                    <option>Project Work</option>
-                    <option>Studying</option>
-                </select>
-            </div>
+<div class="mb-3">
+<label class="form-label">Age Range</label>
+<select name="age" class="form-select">
+<option>13-15</option>
+<option>16-18</option>
+</select>
+</div>
 
-            <div class="mb-3">
-                <label class="form-label">Style</label>
-                <select name="style" class="form-select">
-                    <option>Calm</option>
-                    <option>Motivational</option>
-                    <option>Concentration</option>
-                </select>
-            </div>
+<div class="mb-3">
+<label class="form-label">Mood</label>
+<select name="mood" class="form-select">
+<option>Anxious</option>
+<option>Stressed</option>
+<option>Tired</option>
+<option>Okay</option>
+</select>
+</div>
 
-            <div class="mb-3">
-                <label class="form-label">Duration (minutes)</label>
-                <select name="length" class="form-select">
-                    <option>5</option>
-                    <option>10</option>
-                </select>
-            </div>
+<div class="mb-3">
+<label class="form-label">Context</label>
+<select name="context" class="form-select">
+<option>Exams</option>
+<option>Project Work</option>
+<option>Studying</option>
+</select>
+</div>
 
-            <button type="submit" id="submitBtn" class="btn btn-primary w-100 btn-lg mt-3">Generate Meditation</button>
-        </form>
-    </div>
+<div class="mb-3">
+<label class="form-label">Style</label>
+<select name="style" class="form-select">
+<option>Calm</option>
+<option>Motivational</option>
+<option>Concentration</option>
+</select>
+</div>
+
+<div class="mb-3">
+<label class="form-label">Duration</label>
+<select name="length" class="form-select">
+<option value="5">5 minutes</option>
+<option value="10">10 minutes</option>
+</select>
+</div>
+
+<!-- NEW JOURNAL INPUT -->
+<div class="mb-3">
+<label class="form-label">How are you feeling today? (Optional)</label>
+<textarea 
+    name="journal" 
+    class="form-control" 
+    rows="4" 
+    placeholder="Write a few words about your feelings, thoughts, or anything on your mind..." 
+    style="border-radius:10px; padding:10px; font-size:14px;"></textarea>
+</div>
+
+<button type="submit" id="submitBtn" class="btn btn-generate w-100 mt-3">
+Generate Meditation
+</button>
+
+</form>
+</div>
+
+<div id="loading-overlay">
+    <div class="breathing-circle"></div>
+    <p class="loading-text">Preparing your meditation...</p>
 </div>
 
 <script>
-    function showLoading() {
-        const btn = document.getElementById('submitBtn');
-        btn.innerHTML = 'Generating...';
-        btn.disabled = true;
-    }
+document.getElementById('meditationForm').addEventListener('submit',function(){
+    const overlay=document.getElementById('loading-overlay')
+    const btn=document.getElementById('submitBtn')
+    overlay.style.visibility='visible'
+    overlay.style.opacity='1'
+    btn.innerHTML='Generating...'
+    btn.disabled=true
+})
 </script>
 
 </body>

@@ -10,8 +10,7 @@ if not api_key:
     print(f"CRITICAL: GEMINI_API_KEY not found. Available keys: {available_keys}")
     raise ValueError("GEMINI_API_KEY not found")
 
-def generate_meditation(age, mood, context, style, length, api_key):
-    # This is your safety net if the API fails
+def generate_meditation(age, mood, context, style, length, api_key, journal=""):
     fallback_script = (
         f"Hello. This is a meditation prepared for you, aged {age}, currently feeling {mood}. "
         f"We know dealing with {context} can be challenging, but you're in the right place. "
@@ -20,25 +19,36 @@ def generate_meditation(age, mood, context, style, length, api_key):
     )
 
     try:
-        print("Clicked")
-
         genai.configure(api_key=api_key)
-        
-        # SPEED UP: Switch to a 'flash' model from your list. 
-        # They are significantly faster than 'pro' models.
-        model = genai.GenerativeModel('models/gemini-3-flash-preview')        
-        
-        prompt = (
-            f"Write a relaxing meditation script for a {age}-year-old teenager. "
-            f"Mood: {mood}. Academic context: {context}. Style: {style}. "
-            f"Duration: Exactly {length} minutes. "
-            f"Crucial: Use short, calm sentences. Include pauses by writing '...' "
-            f"and insert natural breathing cues like '(inhale deeply)' and '(exhale slowly)'. "
-            f"Return ONLY the spoken text, no stage directions, no titles, no intro text."
-        )
-        
+        model = genai.GenerativeModel('models/gemini-3-flash-preview')
+        length_minutes = int(length)  # from the form
+        words_per_minute = 220
+        target_words = length_minutes * words_per_minute
+
+        journal_prompt = f" Also, gently incorporate these thoughts from the user: '{journal}'." if journal else ""
+
+        prompt = f"""
+        Write a {style} meditation script for a {age}-year-old. 
+        Mood: {mood}. 
+        Context: {context}. 
+        Duration: {length} minutes (~{target_words} words).
+        {journal_prompt}
+
+        Instructions for natural rhythm and breathing:
+        1. Speak in short, calm sentences.
+        2. Use '...' to indicate short pauses between phrases.
+        3. Include explicit breathing cues as (inhale)... ... (exhale)... in the text for TTS to interpret naturally.
+        4. Use extra '...' or spacing for longer pauses.
+        5. Keep the voice gentle, soft, and soothing.
+        6. End each thought completely before moving to the next.
+
+        Example:
+        "Sit comfortably... allow your shoulders to soften... (inhale)... ... (exhale)... feel your body relaxing... let go of tension..."
+
+        Return only the final script, ready for TTS. Do not include any labels, titles, or explanations.
+        """
+
         response = model.generate_content(prompt)
-        print("Generated")
         return response.text if response.text else fallback_script
 
     except Exception as e:
