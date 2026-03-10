@@ -3,3 +3,6 @@ gTTS==2.5.4
 python-dotenv==1.2.2
 google-generativeai==0.8.3
 gunicorn==23.0.0
+elevenlabs==2.38.1
+openai==2.26.0
+protobuf==7.34.0
