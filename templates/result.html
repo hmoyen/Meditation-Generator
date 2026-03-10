@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Meditation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container d-flex justify-content-center align-items-center min-vh-100">
+    <div class="card p-4 shadow-sm text-center" style="max-width: 500px; width: 100%;">
+        <h2 class="mb-4">Your Meditation</h2>
+        
+        <p class="text-muted">Take a deep breath. Your session is ready.</p>
+
+        <audio controls class="w-100 my-3">
+            <source src="{{ url_for('static', filename='audio/' + audio_file) }}" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+
+        <div class="d-grid gap-2 mt-3">
+            <a href="{{ url_for('static', filename='audio/' + audio_file) }}" class="btn btn-primary" download>Download Audio (.mp3)</a>
+            <a href="{{ url_for('static', filename='scripts/' + script_file) }}" class="btn btn-outline-secondary" download>Download Script (.txt)</a>
+        </div>
+
+        <div class="mt-4">
+            <a href="/" class="text-decoration-none">← Generate another</a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
