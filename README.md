@@ -89,14 +89,29 @@ After generation, the user can:
 - Download the **audio file (.mp3)**
 - Download the **meditation script (.txt)**
 
+### Basic Logging
+
+The application tracks generation metadata to help monitor usage and user preferences. Every request is logged into a **PostgreSQL database** (hosted on Render).
+
+Data captured includes:
+
+- **User Inputs:** Age range, mood, context, style, and duration.
+- **Content:** The optional journal entry provided by the user.
+- **Artifacts:** Filenames for the generated `.mp3` and `.txt` files for traceability.
+- **Timestamp:** Automatic recording of when the meditation was created.
+
+![log.png](images/log.png)
+
 ---
 
 # Tech Stack
 
 **Backend**
 
-- Python
+- Python (3.11.11)
 - Flask
+- SQLAlchemy (ORM for database management)
+- PostgreSQL (Database hosted on Render)
 
 **AI / APIs**
 
@@ -124,19 +139,22 @@ This application was deployed to **Render** by connecting it to this GitHub repo
 
 ---
 
-### Database & Persistence (Future Development)
+### Database & Persistence (Current & Future)
 
-Currently, the application serves as a real-time generator. When deployed, it does not use a persistent database; generated meditations are stored temporarily in the server's local file system.
+**Current Status (Logging Only):**
+The application currently uses a **PostgreSQL database** (hosted on Render) to store metadata logs for every meditation generated. This includes the user's mood, context, and file references.
 
-> **Note on Persistence:** On platforms like Render, the local disk is **ephemeral**. This means that whenever the server restarts or goes to sleep, any generated `.mp3` or `.txt` files are deleted.
+> **Note on File Persistence:** While the *logs* are permanent, the local server storage on Render is **ephemeral**. This means that although the database remembers the file name, the actual `.mp3` and `.txt` files are deleted whenever the server restarts or goes to sleep.
 > 
 
-**To evolve the project, the next steps would be:**
+**Future Roadmap:**
+To fully evolve the project, the next steps are:
 
-- **Session Persistence:** Integrating a database to allow users to create accounts and save their meditation history.
-- **Replayability:** Instead of only downloading files locally, users could access a personal library in the cloud to replay meditations anytime.
+- **Cloud File Storage:** Migrating from local storage to **Google Cloud Storage**. This will ensure that the audio files themselves are never deleted and can be accessed forever via the log links.
+- **User Accounts (Session Persistence):** Expanding the current database schema to include user profiles, allowing teenagers to log in, save "favorite" meditations, and track their progress over time.
+- **Library View:** Implementing a dashboard where users can access a personal library of previously generated sessions to replay them without needing to download them locally.
 
-### Scalable Architecture (Google Cloud Migration)
+### `How I would run this on Google Cloud`
 
 First, we follow the official documentation: [Deploying a containerized app to Cloud Run](https://docs.cloud.google.com/deploy/docs/deploy-app-run). Creating a Dockerfile is straightforward with our current setup and allows the app to run consistently in the cloud.
 
@@ -165,6 +183,7 @@ meditation-generator/
 ├── app.py
 ├── meditation.py
 ├── tts.py
+├── db.py             
 ├── requirements.txt
 │
 ├── templates/
@@ -178,33 +197,45 @@ meditation-generator/
 └── README.md
 ```
 
-# Main Components
+### Main Components
 
-[**app.py**](http://app.py/) Main Flask application.
+**app.py** Main Flask application.
 
 - **Responsibilities:**
-    - Serve the HTML interface.
-    - Receive form data.
-    - Trigger meditation and audio generation.
-    - Save files and render results page.
+    - Serves the HTML interface.
+    - Receives and validates form data.
+    - Coordinates the generation pipeline (Script -> Audio -> Database).
+    - Saves generated artifacts and renders the final result page.
 
-[**meditation.py**](http://meditation.py/) Handles **meditation script generation**.
+**db.py** Handles **data persistence and logging**.
 
-- Uses Google Gemini to create tailored content.
-- Includes breathing rhythm and pacing cues.
-- Falls back to a basic meditation if the API fails.
+- Defines the `MeditationLog` schema using SQLAlchemy.
+- Connects to a PostgreSQL database (hosted on Render).
+- Provides the `log_request` function to record user inputs and generated file paths.
 
-[**tts.py**](http://tts.py/) Handles **text-to-speech generation**.
+**meditation.py** Handles **meditation script generation**.
 
-- Uses OpenAI TTS to convert text into `.mp3`.
-- Streams the generated audio to a file.
+- Uses Google Gemini to create content tailored to the teenager's mood and context.
+- Injects breathing rhythm and pacing cues directly into the prompt.
+- Includes a fallback mechanism to provide a basic meditation if the API fails.
+
+**tts.py** Handles **text-to-speech generation**.
+
+- Uses OpenAI TTS to convert the script into high-quality `.mp3` audio.
+- Streams the generated audio directly to a local file for immediate playback.
 
 **templates**
 
-- `index.html`: Form, journal input, and loading animation.
-- `result.html`: Audio player, download buttons, and breathing animation.
+- `index.html`: Contains the input form, journal section, and a loading animation.
+- `result.html`: Features the audio player, download buttons, and a breathing exercise UI.
 
-This diagram illustrates the flow of interactions in the meditation app, showing how the user, the Flask application, and the external APIs (Gemini and OpenAI TTS) communicate. The user submits a form with their personal and contextual inputs, which the Flask app validates before requesting a meditation script from the Gemini API. If Gemini fails, a fallback script is used. Next, the Flask app sends the script to the OpenAI TTS service to generate audio, again handling any failures gracefully. Finally, both the audio and script files are saved and presented to the user on the result page. Alternative flows are included to ensure the app continues to function smoothly even if external services fail.
+---
+
+### Application Flow & Architecture
+
+This diagram illustrates the flow of interactions within the meditation app. The process begins when the user submits a form with their personal and contextual inputs. The Flask app validates these inputs and requests a personalized script from the **Gemini API**. If Gemini fails, a pre-written fallback script is used to ensure the user still receives a session.
+
+Once the script is ready, the app communicates with **OpenAI TTS** to generate the spoken audio. After both the script (.txt) and audio (.mp3) are saved locally, the system calls the **Database (db.py)** layer to log the entire transaction—including user parameters and file names—into the PostgreSQL database. Finally, the user is presented with the result page where they can play or download their custom meditation. This architecture ensures that even if an external API fails, the application remains functional, and all successful generations are traceable via persistent logs.
 
 ![Sequence diagram of the App Flow](images/meditation.png)
 
@@ -234,9 +265,10 @@ Create a `.env` file in the project root:
 ```jsx
 GEMINI_API_KEY=your_gemini_api_key
 OPENAI_API_KEY=your_openai_api_key
+DATABASE_URL=your_postgresql_connection_string
 ```
 
-*Note: Both services offer free tiers sufficient for testing.*
+*Note: All services offer free tiers sufficient for testing.*
 
 # Running the Application
 
