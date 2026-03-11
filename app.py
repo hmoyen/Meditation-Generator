@@ -4,6 +4,7 @@ from tts import generate_audio
 import uuid
 from dotenv import load_dotenv
 import os
+from db import log_request
 
 # Load environment variables
 load_dotenv()
@@ -38,7 +39,6 @@ def generate():
         # Validate required fields
         if not all([age, mood, context, style, length]):
             return "Missing required fields.", 400
-
         # Generate meditation script
         try:
             script = generate_meditation(age, mood, context, style, length, api_key, journal)
@@ -81,6 +81,13 @@ def generate():
 
         script_filename = f"{unique_id}.txt"
         script_path = os.path.join(script_dir, script_filename)
+
+        # -------- DATABASE LOGGING --------
+        try:
+            log_request(age, mood, context, style, length, journal, audio_filename, script_filename)
+        except Exception as e:
+            print(f"Database logging error: {e}")  # do not interrupt the user experience
+
 
         try:
             with open(script_path, "w", encoding="utf-8") as f:

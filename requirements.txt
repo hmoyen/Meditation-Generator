@@ -6,3 +6,5 @@ gunicorn==23.0.0
 elevenlabs==2.38.1
 openai==2.26.0
 protobuf>=3.20.2,<6.0.0
+SQLAlchemy==2.0.28
+psycopg2-binary==2.9.9
